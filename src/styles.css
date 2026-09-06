@@ -132,3 +132,7 @@
     overscroll-behavior: none;
   }
 }
+
+.splash-mark {
+  animation: dun-enter 400ms var(--ease-out-soft) both;
+}

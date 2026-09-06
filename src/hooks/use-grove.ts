@@ -167,7 +167,6 @@ export function useGrove() {
           return;
         }
         guestAdd(draft);
-        toast.success("Added");
         return;
       }
       await createMut.mutateAsync(draft);

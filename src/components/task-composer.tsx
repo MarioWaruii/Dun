@@ -1,5 +1,4 @@
-import { useMemo, useState, type FormEvent } from "react";
-import { toast } from "sonner";
+import { useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Drawer,
@@ -62,29 +61,24 @@ export function TaskComposer({
         weekday: kind === "weekly" ? weekday : null,
         circleId: signedIn ? circleId : null,
       });
-            setTitle("");
+      setTitle("");
       setNotes("");
       setKind("once");
       onOpenChange(false);
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Could not add that task");
     } finally {
       setBusy(false);
     }
-  }
-
-  function onSave(e: FormEvent) {
-    e.preventDefault();
-    void save();
   }
 
   return (
     <Drawer open={open} onOpenChange={onOpenChange}>
       <DrawerContent>
         <div className="flex flex-col gap-5 overflow-y-auto px-5 pb-5 pt-4">
-          <form className="flex flex-col gap-5" onSubmit={onSave}>
           <div>
             <DrawerTitle>New task</DrawerTitle>
+            <DrawerDescription className="mt-1">
+              Daily, weekly, or a set date — Dun nudges undone work every 4 hours.
+            </DrawerDescription>
           </div>
 
           <div className="flex flex-col gap-2">
@@ -217,10 +211,10 @@ export function TaskComposer({
               rows={3}
             />
           </div>
-          <Button type="submit" size="lg" disabled={!canSave}>
+
+          <Button size="lg" disabled={!canSave} onClick={() => void save()}>
             {busy ? "Saving…" : "Add task"}
           </Button>
-          </form>
         </div>
       </DrawerContent>
     </Drawer>

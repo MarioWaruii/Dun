@@ -6,14 +6,7 @@ export function cn(...inputs: ClassValue[]) {
 }
 
 export function newId(): string {
-  try {
-    if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
-      return crypto.randomUUID();
-    }
-  } catch {
-    /* insecure context (http on a LAN IP) */
-  }
-  return `dun_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 10)}`;
+  return crypto.randomUUID();
 }
 
 const INVITE_ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";

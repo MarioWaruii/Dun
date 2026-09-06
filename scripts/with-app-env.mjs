@@ -20,9 +20,9 @@
  * `process.env`, which is why the merge has to happen before Vite starts.
  */
 import { spawn } from "node:child_process";
-import { readFileSync, realpathSync } from "node:fs";
+import { existsSync, readFileSync, realpathSync } from "node:fs";
 import { constants as osConstants } from "node:os";
-import { dirname, join } from "node:path";
+import { delimiter, dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
 export const APP_ENV_REL_PATH = ".grok/app-env.json";
@@ -104,14 +104,35 @@ export function isMainModule(moduleUrl) {
   }
 }
 
+function withLocalBin(env) {
+  const next = { ...env };
+  const binDir = join(projectRoot(), "node_modules", ".bin");
+  const pathKey =
+    process.platform === "win32" && next.Path && !next.PATH ? "Path" : "PATH";
+  next[pathKey] = `${binDir}${delimiter}${next[pathKey] ?? ""}`;
+  return next;
+}
+
+/** Run `vite` via `node …/vite/bin/vite.js` so Windows does not need a `vite.cmd` on PATH. */
+function resolveSpawn(command, args) {
+  if (command === "vite") {
+    const viteJs = join(projectRoot(), "node_modules", "vite", "bin", "vite.js");
+    if (existsSync(viteJs)) {
+      return { file: process.execPath, argv: [viteJs, ...args], shell: false };
+    }
+  }
+  return { file: command, argv: args, shell: process.platform === "win32" };
+}
+
 function main(argv) {
   const [command, ...args] = argv;
   if (!command) {
     console.error("usage: node scripts/with-app-env.mjs <command> [args…]");
     process.exit(2);
   }
-  const env = mergeAppEnv(readAppEnv(projectRoot()), process.env);
-  const child = spawn(command, args, { stdio: "inherit", env });
+  const env = withLocalBin(mergeAppEnv(readAppEnv(projectRoot()), process.env));
+  const { file, argv: childArgs, shell } = resolveSpawn(command, args);
+  const child = spawn(file, childArgs, { stdio: "inherit", env, shell });
   // The dev server is long-running and is stopped by signalling this wrapper.
   for (const signal of ["SIGINT", "SIGTERM", "SIGHUP"]) {
     process.on(signal, () => child.kill(signal));

@@ -1,7 +1,9 @@
 Dun — local setup
 =================
 
-1. Install Node.js 22 or newer from https://nodejs.org
+Windows, Mac, or Linux.
+
+1. Install Node.js 22+ from https://nodejs.org
 2. Unzip this archive
 3. In a terminal:
 
@@ -9,10 +11,8 @@ Dun — local setup
    npm install
    npm run dev
 
-4. Open the URL it prints in your browser.
+4. Open the URL it prints.
 
-Guest mode works with no account. Create an email account to sync and share Circles.
+If `npm run dev` fails with spawn vite ENOENT, run:
 
-Phone app (PWA)
----------------
-Open that URL in Safari (iPhone) or Chrome (Android), then Add to Home Screen / Install app.
+   npx vite dev --host 0.0.0.0 --port 8080

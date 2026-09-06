@@ -4,14 +4,16 @@ import { useMemo, useState } from "react";
 import { toast } from "sonner";
 import { AuthSlot } from "@/components/auth-slot";
 import { InstallApp } from "@/components/install-app";
-import { DunMark } from "@/components/mark";
+import { ProfileEditor } from "@/components/profile-editor";
 import { ReminderEngine } from "@/components/reminder-engine";
 import { CircleComposer, TaskComposer } from "@/components/task-composer";
 import { TaskItem } from "@/components/task-item";
+import { UserAvatar } from "@/components/user-avatar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useGrove } from "@/hooks/use-grove";
+import { avatarSrc, useProfileStore } from "@/lib/profile/store";
 import type { Task } from "@/lib/tasks/types";
 import { cn } from "@/lib/utils";
 
@@ -26,9 +28,11 @@ const TABS: { id: Tab; label: string; icon: typeof ListTodo }[] = [
 
 export function AppHome() {
   const grove = useGrove();
+  const profile = useProfileStore();
   const [tab, setTab] = useState<Tab>("today");
   const [composerOpen, setComposerOpen] = useState(false);
   const [circleOpen, setCircleOpen] = useState(false);
+  const [profileOpen, setProfileOpen] = useState(false);
   const [joinCode, setJoinCode] = useState("");
 
   const todayLabel = useMemo(
@@ -68,13 +72,19 @@ export function AppHome() {
   return (
     <div className="mx-auto flex min-h-dvh w-full max-w-lg flex-col px-4 pb-36 pt-[max(1.25rem,env(safe-area-inset-top))]">
       <header className="flex items-start justify-between gap-3">
-        <div className="flex items-center gap-3">
-          <DunMark className="size-11" />
-          <div>
-            <p className="font-display text-2xl font-semibold leading-none tracking-tight">Dun</p>
+        <button
+          type="button"
+          onClick={() => setProfileOpen(true)}
+          className="flex min-w-0 items-center gap-3 text-left"
+        >
+          <UserAvatar src={avatarSrc(profile)} username={profile.username} className="size-11" />
+          <div className="min-w-0">
+            <p className="truncate font-display text-2xl font-semibold leading-none tracking-tight">
+              {profile.username}
+            </p>
             <p className="mt-1 text-sm text-muted-foreground">{todayLabel}</p>
           </div>
-        </div>
+        </button>
         <AuthSlot />
       </header>
 
@@ -154,7 +164,7 @@ export function AppHome() {
       </button>
 
       <nav
-        className="fixed inset-x-0 bottom-0 z-30 mx-auto max-w-lg border-t border-border bg-card/95 pb-[env(safe-area-inset-bottom)] backdrop-blur-md"
+        className="fixed inset-x-0 bottom-0 z-30 mx-auto max-w-lg border-t border-border bg-card/95 pb-[env(safe-area-inset-bottom)] backdrop-blur-md max-sm:ps-24"
         aria-label="Task views"
       >
         <div className="grid grid-cols-4">
@@ -194,6 +204,7 @@ export function AppHome() {
           toast.success(`${circle.emoji} ${circle.name} is ready`);
         }}
       />
+      <ProfileEditor open={profileOpen} onOpenChange={setProfileOpen} />
     </div>
   );
 }
