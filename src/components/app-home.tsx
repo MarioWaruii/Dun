@@ -2,7 +2,6 @@ import { Link } from "@tanstack/react-router";
 import { CalendarClock, CheckCircle2, ListTodo, Plus, Users } from "lucide-react";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
-import { AuthSlot } from "@/components/auth-slot";
 import { InstallApp } from "@/components/install-app";
 import { ProfileEditor } from "@/components/profile-editor";
 import { ReminderEngine } from "@/components/reminder-engine";
@@ -71,21 +70,28 @@ export function AppHome() {
 
   return (
     <div className="mx-auto flex min-h-dvh w-full max-w-lg flex-col px-4 pb-36 pt-[max(1.25rem,env(safe-area-inset-top))]">
-      <header className="flex items-start justify-between gap-3">
+           <header className="flex items-center justify-between gap-4">
         <button
           type="button"
           onClick={() => setProfileOpen(true)}
-          className="flex min-w-0 items-center gap-3 text-left"
+          className="flex min-w-0 flex-1 items-center gap-3.5 text-left"
         >
-          <UserAvatar src={avatarSrc(profile)} username={profile.username} className="size-11" />
+          <UserAvatar src={avatarSrc(profile)} username={profile.username} className="size-12" />
           <div className="min-w-0">
-            <p className="truncate font-display text-2xl font-semibold leading-none tracking-tight">
+            <p className="truncate font-display text-xl font-semibold leading-tight tracking-tight">
               {profile.username}
             </p>
-            <p className="mt-1 text-sm text-muted-foreground">{todayLabel}</p>
+            <p className="mt-0.5 text-sm text-muted-foreground">{todayLabel}</p>
           </div>
         </button>
-        <AuthSlot />
+        {!grove.signedIn ? (
+          <Link
+            to="/login"
+            className="shrink-0 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
+          >
+            Sign in
+          </Link>
+        ) : null}
       </header>
 
       <section className="stagger-in mt-6 flex flex-col gap-4">
@@ -164,7 +170,7 @@ export function AppHome() {
       </button>
 
       <nav
-        className="fixed inset-x-0 bottom-0 z-30 mx-auto max-w-lg border-t border-border bg-card/95 pb-[env(safe-area-inset-bottom)] backdrop-blur-md max-sm:ps-24"
+        className="fixed inset-x-0 bottom-0 z-30 mx-auto max-w-lg border-t border-border bg-card/95 pb-[env(safe-area-inset-bottom)] backdrop-blur-md"
         aria-label="Task views"
       >
         <div className="grid grid-cols-4">
