@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import { toast } from "sonner";
 import { InstallApp } from "@/components/install-app";
 import { ProfileEditor } from "@/components/profile-editor";
+import { AuthSlot } from "@/components/auth-slot";
 import { ReminderEngine } from "@/components/reminder-engine";
 import { CircleComposer, TaskComposer } from "@/components/task-composer";
 import { TaskItem } from "@/components/task-item";
@@ -84,11 +85,7 @@ export function AppHome() {
             <p className="mt-0.5 text-sm text-muted-foreground">{todayLabel}</p>
           </div>
         </button>
-       {!grove.user || grove.user.isDevFallback ? (
-          <Button asChild size="sm" variant="ink">
-            <Link to="/login">Sign in</Link>
-          </Button>
-        ) : null}
+        <AuthSlot />
       </header>
 
       <section className="stagger-in mt-6 flex flex-col gap-4">
