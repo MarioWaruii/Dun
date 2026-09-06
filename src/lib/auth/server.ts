@@ -91,39 +91,65 @@ export const authConfigured =
 // it derives the origin per-request from the (proxied) host, validated against the
 // preview allowlist, which makes the OAuth `redirect_uri` the concrete preview URL
 // the broker's preview client accepts.
-const explicitBaseURL = env("BETTER_AUTH_URL");
-// Explicit `string[]` (not a readonly tuple) — Better Auth's DynamicBaseURLConfig
-// requires a mutable `allowedHosts: string[]`.
+const explicitBaseURL = env("BETTER_AUTH_URL")?.replace(/\/+$/, "");
 const previewAllowedHosts: string[] = [...PREVIEW_ALLOWED_HOSTS];
-// Local `npm run dev` (port 8080 contract). Browsers may send Origin as any of
-// these for the same server — trusting only `localhost` rejects `127.0.0.1` and
-// breaks email/password with "Invalid origin".
 const LOCAL_DEV_ORIGINS: string[] = [
   "http://localhost:8080",
   "http://127.0.0.1:8080",
   "http://[::1]:8080",
+  "http://localhost:5173",
+  "http://127.0.0.1:5173",
 ];
+
+function originFromHost(host: string | undefined): string | undefined {
+  const value = host?.trim().replace(/\/+$/, "");
+  if (!value) return undefined;
+  if (value.startsWith("http://") || value.startsWith("https://")) return value;
+  return `https://${value}`;
+}
+
+const vercelOrigins = [
+  originFromHost(env("VERCEL_URL")),
+  originFromHost(env("VERCEL_PROJECT_PRODUCTION_URL")),
+  originFromHost(env("VERCEL_BRANCH_URL")),
+].filter((value): value is string => Boolean(value));
+
 const baseURL = explicitBaseURL ?? {
-  // Include loopback hosts so dynamic baseURL resolves for local email/password
-  // (not only the preview wildcard).
-  allowedHosts: [...previewAllowedHosts, "localhost", "127.0.0.1", "[::1]"],
-  // `auto` → trust both http:// and https:// expansions of allowedHosts
-  // (preview is https; local dev is http).
+  allowedHosts: [...previewAllowedHosts, "localhost", "127.0.0.1", "[::1]", "*.vercel.app"],
   protocol: "auto" as const,
   fallback: "http://localhost:8080",
 };
 
-// Origins Better Auth accepts on credentialed POSTs (sign-up/sign-in, etc.).
-// Missing entries here surface as FORBIDDEN "Invalid origin".
-const trustedOrigins: string[] = explicitBaseURL
-  ? [explicitBaseURL, ...LOCAL_DEV_ORIGINS]
-  : [
-      // Host wildcards (matched against Origin's host)
-      ...previewAllowedHosts,
-      // Full-origin wildcards (matched against Origin)
-      ...previewAllowedHosts.flatMap((host) => [`https://${host}`, `http://${host}`]),
+const staticTrustedOrigins: string[] = [
+  ...new Set(
+    [
+      explicitBaseURL,
+      ...vercelOrigins,
+      "*.vercel.app",
+      "https://*.vercel.app",
       ...LOCAL_DEV_ORIGINS,
-    ];
+      ...previewAllowedHosts,
+      ...previewAllowedHosts.flatMap((host) => [`https://${host}`, `http://${host}`]),
+    ].filter((value): value is string => Boolean(value)),
+  ),
+];
+
+function requestOrigin(request?: Request): string[] {
+  if (!request) return [];
+  const origin = request.headers.get("origin");
+  const host = request.headers.get("x-forwarded-host") ?? request.headers.get("host");
+  if (!origin || !host) return [];
+  try {
+    const originHost = new URL(origin).host;
+    const requestHost = host.split(",")[0]?.trim();
+    if (originHost && requestHost && originHost === requestHost) return [origin];
+  } catch {
+    /* ignore */
+  }
+  return [];
+}
+
+const trustedOrigins = (request?: Request) => [...staticTrustedOrigins, ...requestOrigin(request)];
 
 const databaseUrl = env("DATABASE_URL");
 
