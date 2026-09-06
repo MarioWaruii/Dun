@@ -84,13 +84,10 @@ export function AppHome() {
             <p className="mt-0.5 text-sm text-muted-foreground">{todayLabel}</p>
           </div>
         </button>
-        {!grove.signedIn ? (
-          <Link
-            to="/login"
-            className="shrink-0 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
-          >
-            Sign in
-          </Link>
+       {!grove.user || grove.user.isDevFallback ? (
+          <Button asChild size="sm" variant="ink">
+            <Link to="/login">Sign in</Link>
+          </Button>
         ) : null}
       </header>
 
